@@ -34,9 +34,9 @@ class _MyHomePageState extends State<MyHomePage> {
 
   void _changeNumber() {
     setState(() {
-      myanmarNumber = MyanmarNumHelper.getSimpleNumInMM(
-        number: "92991.00533",
-        isCommaSeparated: true,
+      myanmarNumber = MyanmarNumHelper.getLongTextNumInMM(
+        number: "15555",
+        mmNumberType: MMNumberType.LONGFORM,
       );
     });
   }
