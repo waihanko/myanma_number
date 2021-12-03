@@ -34,9 +34,9 @@ class _MyHomePageState extends State<MyHomePage> {
 
   void _changeNumber() {
     setState(() {
-      myanmarNumber = MyanmarNumHelper.getLongTextNumInMM(
-        number: "15555",
-        mmNumberType: MMNumberType.LONGFORM,
+      myanmarNumber = MyanmarNumHelper.getLongTextNumInMM2(
+        number: "401013863",
+        mmNumberType: MMNumberType.NUMBER,
       );
     });
   }

@@ -7,34 +7,6 @@ class MyanmarNumHelper {
 
   MyanmarNumHelper._internal();
 
-  static List<String> coded = ["GM", "HOT", "YAH"]; //ABV list
-  static List<String> decoded = [
-    "Gmail",
-    "Hotmail",
-    "Yahoo"
-  ]; //corresponding list
-  static Map<String, String> map = Map.fromIterables(coded, decoded);
-
-  // static List<String> numType1 = [
-  //   "ကုဋေ",
-  //   "သန်း",
-  //   "သိန်း",
-  //   "သောင်း",
-  //   "ထောင်",
-  //   "ရာ",
-  //   "ဆယ်",
-  //   "",
-  // ];
-  // static List<String> numType2 = [
-  //   "ကုဋေ",
-  //   "သန်း",
-  //   "သိန်း",
-  //   "သောင်း",
-  //   "ထောင့်",
-  //   "ရာ့",
-  //   "ဆယ့်",
-  //   ""
-  // ];
 
   static List<String> numType1 = [
     "",
@@ -88,32 +60,136 @@ class MyanmarNumHelper {
   }
 
   static String getLongTextNumInMM(
-      {required String number,
-      MMNumberType mmNumberType = MMNumberType.LONGFORM}) {
+      {required String number, MMNumberType mmNumberType = MMNumberType.TEXT}) {
     String result = "";
     List<String> wholeNumber = number.split(".");
 
-    wholeNumber[0].split("").reversed.toList().asMap().forEach((index, element) {
-      if(element == "0") return;
-      String prefix = mmNumberType == MMNumberType.LONGFORM
+    if (wholeNumber[0].length >= 3 && !wholeNumber[0].endsWith("0")) {
+      numType1[1] = "ဆယ့်";
+    }
+    if (wholeNumber[0].length >= 4 && !wholeNumber[0].endsWith("00")) {
+      numType1[2] = "ရာ့";
+    }
+    if (wholeNumber[0].length >= 5 && !wholeNumber[0].endsWith("0000")) {
+      numType1[3] = "ထောင့်";
+    }
+
+    wholeNumber[0]
+        .split("")
+        .reversed
+        .toList()
+        .asMap()
+        .forEach((index, element) {
+      if (element == "0") return;
+      String prefix = mmNumberType == MMNumberType.TEXT
           ? element.trim().getMMDescription
           : element.trim().getMMNumber;
       String postFix = numType1[index];
-      result =  prefix + postFix + result ;
+      result = prefix + postFix + result;
     });
 
     if (wholeNumber.length > 1) {
-      result += mmNumberType == MMNumberType.LONGFORM
+      result += mmNumberType == MMNumberType.TEXT
           ? ".".getMMDescription
-          :".". getMMNumber;
+          : ".".getMMNumber;
 
       wholeNumber[1].split("").asMap().forEach((index, element) {
-        result += mmNumberType == MMNumberType.LONGFORM
+        result += mmNumberType == MMNumberType.TEXT
             ? element.trim().getMMDescription
-            : element.trim(). getMMNumber;
+            : element.trim().getMMNumber;
       });
     }
 
+    return result;
+  }
+
+  //Over 8 && NORMAL => Change To THEIN
+  //Over 10 && THEIN => Change To THAN
+  //Over 12 && THAN => Change To GADAY
+  //Over 14 is Invalid
+
+  static String getLongTextNumInMM2({
+    required String number,
+    MMNumberType mmNumberType = MMNumberType.TEXT,
+  }) {
+    String result = "";
+    DisplayFormat displayFormat = DisplayFormat.DEFAULT;
+        List<String> wholeNumber = number.split(".");
+    if (wholeNumber[0].length > 14) {
+      return "INVALID AMOUNT";
+    } else if (wholeNumber[0].length > 12 &&
+        displayFormat == DisplayFormat.THAN) {
+      displayFormat = DisplayFormat.GADAY;
+    } else if (wholeNumber[0].length > 10 &&
+        displayFormat == DisplayFormat.THEIN) {
+      displayFormat = DisplayFormat.THAN;
+    } else if (wholeNumber[0].length > 8 &&
+        displayFormat == DisplayFormat.DEFAULT) {
+      displayFormat = DisplayFormat.GADAY;
+    }
+
+    result += getFullNumber(
+        wholeNumber[0].substring(
+            0, wholeNumber[0].length - displayFormat.getPartition.index),
+        mmNumberType,
+        wholeNumber[0].length);
+
+    if (wholeNumber[0]
+        .substring(0, wholeNumber[0].length - displayFormat.getPartition.index)
+        .endsWith("0")) {
+      result = displayFormat.getPartition.name + result;
+    } else {
+      result = result + displayFormat.getPartition.name;
+    }
+
+    result += getFullNumber(
+        wholeNumber[0].substring(
+            wholeNumber[0].length - displayFormat.getPartition.index,
+            wholeNumber[0].length),
+        mmNumberType,
+        wholeNumber[0].length);
+
+    if (wholeNumber.length > 1) {
+      result += mmNumberType == MMNumberType.TEXT
+          ? ".".getMMDescription
+          : ".".getMMNumber;
+
+      wholeNumber[1].split("").asMap().forEach((index, element) {
+        result += mmNumberType == MMNumberType.TEXT
+            ? element.trim().getMMDescription
+            : element.trim().getMMNumber;
+      });
+    }
+
+    return result;
+  }
+
+  static String getFullNumber(
+    String wholeNumber,
+    MMNumberType mmNumberType,
+    int digitCount,
+  ) {
+    String result = "";
+    List<String> numType2 = List.of(numType1);
+
+    if (digitCount >= 2 && !wholeNumber.endsWith("0")) {
+      numType2[1] = "ဆယ့်";
+    }
+    if (digitCount >= 3 && !wholeNumber.endsWith("00")) {
+      numType2[2] = "ရာ့";
+    }
+    if (digitCount >= 4 && !wholeNumber.endsWith("000")) {
+      numType2[3] = "ထောင့်";
+    }
+
+    wholeNumber.split("").reversed.toList().asMap().forEach((index, element) {
+      if (element == "0") return;
+      String prefix = mmNumberType == MMNumberType.TEXT
+          ? element.trim().getMMDescription
+          : element.trim().getMMNumber;
+      String postFix = numType2[index];
+      result = prefix + postFix + result;
+    });
     return result;
   }
 }
@@ -178,4 +254,29 @@ extension ExtendedString on String {
   }
 }
 
-enum MMNumberType { LONGFORM, SHORTFORM }
+extension DisplayFormatExt on DisplayFormat {
+  DisplayFormatVo get getPartition {
+    switch (this) {
+      case DisplayFormat.THEIN:
+        return DisplayFormatVo(5, "သိန်း");
+      case DisplayFormat.THAN:
+        return DisplayFormatVo(6, "သန်း");
+      case DisplayFormat.GADAY:
+        return DisplayFormatVo(7, "ကုဋေ");
+      case DisplayFormat.DEFAULT:
+        return DisplayFormatVo(0, "");
+      default:
+        return DisplayFormatVo(0, "");
+    }
+  }
+}
+
+class DisplayFormatVo {
+  final int index;
+  final String name;
+
+  DisplayFormatVo(this.index, this.name);
+}
+
+enum MMNumberType { TEXT, NUMBER }
+enum DisplayFormat { THEIN, THAN, GADAY, DEFAULT }
